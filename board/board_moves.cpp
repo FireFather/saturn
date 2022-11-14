@@ -2,65 +2,63 @@
 #include "../zobrist.hpp"
 #include "../movgen/attack.hpp"
 
-
 /*
  * FILE: board_moves.cpp
  * Here goes all the stuff to do with (un)doing moves
  * */
 
-constexpr File rook_start(bool queenside) {
-    return File(FILE_H ^ (7 * queenside));
+constexpr File rook_start(const bool queenside) {
+    return static_cast<File>(FILE_H ^ (7 * queenside));
 }
 
-constexpr File rook_end(bool queenside) {
-    return File((FILE_F ^ (7 * queenside)) + queenside);
+constexpr File rook_end(const bool queenside) {
+    return static_cast<File>((FILE_F ^ (7 * queenside)) + queenside);
 }
 
-Board Board::do_move(Move m) const {
+Board Board::do_move(const Move m) const {
     Board result = *this;
 
     result.en_passant_ = SQ_NONE;
     result.checkers_ = 0;
 
-    Square from = from_sq(m), to = to_sq(m);
-    Color us = side_to_move_, them = ~us;
+    const Square from = from_sq(m), to = to_sq(m);
+    const Color us = side_to_move_, them = ~us;
 
-    Bitboard from_bb = square_bb(from), to_bb = square_bb(to),
-             mbb = from_bb | to_bb;
-    Piece moved = piece_on(from);
+    const Bitboard from_bb = square_bb(from), to_bb = square_bb(to),
+                   mbb = from_bb | to_bb;
+    const Piece moved = piece_on(from);
 
     result.remove_piece(from);
 
-    Piece captured = piece_on(to);
+    const Piece captured = piece_on(to);
     if (captured != NO_PIECE)
         result.remove_piece(to);
-    Piece p = type_of(m) == PROMOTION ? make_piece(
-            us, prom_type(m)) : moved;
+    const Piece p = type_of(m) == PROMOTION ? make_piece(
+		                    us, prom_type(m)) : moved;
     result.put_piece(p, to);
 
-    uint8_t disable_wks = (mbb & KINGSIDE_BB[WHITE]) != 0,
-            disable_bks = (mbb & KINGSIDE_BB[BLACK]) != 0,
-            disable_wqs = (mbb & QUEENSIDE_BB[WHITE]) != 0,
-            disable_bqs = (mbb & QUEENSIDE_BB[BLACK]) != 0;
-    
-    uint8_t cr_disabled = (disable_bqs << 3) | (disable_bks << 2)
-        | (disable_wqs << 1) | disable_wks;
-    result.castling_ = CastlingRights(castling_ 
-            & (ALL_CASTLING ^ cr_disabled));
+    const uint8_t disable_wks = (mbb & KINGSIDE_BB[WHITE]) != 0,
+                  disable_bks = (mbb & KINGSIDE_BB[BLACK]) != 0,
+                  disable_wqs = (mbb & QUEENSIDE_BB[WHITE]) != 0,
+                  disable_bqs = (mbb & QUEENSIDE_BB[BLACK]) != 0;
 
-    Bitboard ksq_bb = result.pieces(them, KING);
-    Square ksq = lsb(ksq_bb);
+    const uint8_t cr_disabled = (disable_bqs << 3) | (disable_bks << 2)
+        | (disable_wqs << 1) | disable_wks;
+    result.castling_ = static_cast<CastlingRights>(castling_
+	    & (ALL_CASTLING ^ cr_disabled));
+
+    const Bitboard ksq_bb = result.pieces(them, KING);
+    const Square ksq = lsb(ksq_bb);
 
     if (type_of(moved) == KNIGHT) {
         result.checkers_ |= attacks_bb<KNIGHT>(ksq) & to_bb;
     } else if (type_of(moved) == PAWN) {
         if (type_of(m) == EN_PASSANT) {
-            Square cap_sq = make_square(file_of(to), rank_of(from));
+	        const Square cap_sq = make_square(file_of(to), rank_of(from));
             result.remove_piece(cap_sq);
             result.checkers_ |= pawn_attacks_bb(them, ksq) & to_bb;
         } else if (type_of(m) == PROMOTION) {
-            PieceType prom = prom_type(m);
-            if (prom == KNIGHT)
+	        if (const PieceType prom = prom_type(m); prom == KNIGHT)
                 result.checkers_ |= attacks_bb<KNIGHT>(ksq) & to_bb;
         } else if (from_bb & (RANK_2_BB | RANK_7_BB) 
                 && to_bb & (RANK_4_BB | RANK_5_BB)) 
@@ -75,10 +73,10 @@ Board Board::do_move(Move m) const {
             result.checkers_ |= pawn_attacks_bb(them, ksq) & to_bb;
         }
     } else if (type_of(m) == CASTLING/* && type_of(moved) == KING*/) {
-        Rank rank = rank_of(to);
-        bool queenside = file_of(to) == FILE_C;
-        Square rk_from = make_square(rook_start(queenside), rank),
-               rk_to = make_square(rook_end(queenside), rank);
+	    const Rank rank = rank_of(to);
+	    const bool queenside = file_of(to) == FILE_C;
+	    const Square rk_from = make_square(rook_start(queenside), rank),
+	                 rk_to = make_square(rook_end(queenside), rank);
         result.remove_piece(rk_from);
         result.put_piece(make_piece(us, ROOK), rk_to);
     }
@@ -127,13 +125,13 @@ Board Board::do_null_move() const {
     return result;
 }
 
-bool Board::is_valid_move(Move m) const {
-    Color us = side_to_move_, them = ~us;
-    
-    Square from = from_sq(m), to = to_sq(m);
-    Bitboard from_bb = square_bb(from), to_bb = square_bb(to);
+bool Board::is_valid_move(const Move m) const {
+	const Color us = side_to_move_, them = ~us;
 
-    Piece moved = piece_on(from), captured = piece_on(to);
+	const Square from = from_sq(m), to = to_sq(m);
+	const Bitboard from_bb = square_bb(from), to_bb = square_bb(to);
+
+	const Piece moved = piece_on(from), captured = piece_on(to);
     
     if (from == to || moved == NO_PIECE || color_of(moved) != us)
         return false;
@@ -160,10 +158,9 @@ bool Board::is_valid_move(Move m) const {
     Bitboard dsts = 0;
     Square ksq = king_square(us);
 
-    PieceType pt = type_of(moved);
-    if (pt == PAWN) {
-        Bitboard my_r3 = relative_rank_bb(us, RANK_3),
-                 my_r8 = relative_rank_bb(us, RANK_8);
+	if (const PieceType pt = type_of(moved); pt == PAWN) {
+	    const Bitboard my_r3 = relative_rank_bb(us, RANK_3),
+	                   my_r8 = relative_rank_bb(us, RANK_8);
         switch (type_of(m)) {
         case NORMAL:
         case PROMOTION:
@@ -183,7 +180,7 @@ bool Board::is_valid_move(Move m) const {
             if (en_passant() != SQ_NONE)
                 dsts = square_bb(en_passant())
                     & pawn_attacks_bb(us, from);
-            Bitboard cap_bb = square_bb(make_square(
+            const Bitboard cap_bb = square_bb(make_square(
                         file_of(to), rank_of(from)));
             occupied ^= cap_bb;
             enemies ^= cap_bb;
@@ -191,7 +188,7 @@ bool Board::is_valid_move(Move m) const {
         }
         default:
             return false;
-        };
+        }
     } else if (pt == KNIGHT && type_of(m) == NORMAL) {
         dsts = attacks_bb<KNIGHT>(from) & ~pieces(us);
     } else if (pt == KING) {
@@ -204,15 +201,15 @@ bool Board::is_valid_move(Move m) const {
         {
             if (checkers_ || relative_rank(us, to) != RANK_1)
                 return false;
-            Bitboard kingside = KINGSIDE_MASK[us] & pieces(),
-                queenside = QUEENSIDE_MASK[us] & pieces();
+            const Bitboard kingside = KINGSIDE_MASK[us] & pieces(),
+                           queenside = QUEENSIDE_MASK[us] & pieces();
 
             Square rk_from, rk_to;
-            Rank rank = rank_of(to);
-            File file = file_of(to);
-            bool can_kingside = kingside_rights(us) & castling_,
-                 can_queenside = queenside_rights(us) & castling_;
-            if (file == FILE_G && can_kingside &&!kingside) {
+            const Rank rank = rank_of(to);
+            const File file = file_of(to);
+            const bool
+	            can_queenside = queenside_rights(us) & castling_;
+            if (const bool can_kingside = kingside_rights(us) & castling_; file == FILE_G && can_kingside &&!kingside) {
                 rk_from = make_square(FILE_H, rank);
                 rk_to = make_square(FILE_F, rank);
                 if (attackers_to(them, sq_shift<EAST>(from),
@@ -232,7 +229,7 @@ bool Board::is_valid_move(Move m) const {
         }
         default:
             return false;
-        };
+        }
     } else if (type_of(m) == NORMAL) { //sliders
         dsts = attacks_bb(pt, from, combined_) & ~pieces(us);
         if (type_of(m) != NORMAL)
@@ -247,10 +244,9 @@ bool Board::is_valid_move(Move m) const {
     return !(attackers_to(them, ksq, occupied) & enemies);
 }
 
-bool Board::is_quiet(Move m) const {
-    MoveType mt = type_of(m);
+bool Board::is_quiet(const Move m) const {
+	const MoveType mt = type_of(m);
     return (mt == NORMAL && !(square_bb(to_sq(m)) 
         & pieces())) || mt == CASTLING;
 }
-
 

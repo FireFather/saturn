@@ -1,0 +1,96 @@
+main.o: main.cpp zobrist.hpp primitives/common.hpp movgen/attack.hpp \
+ movgen/../primitives/bitboard.hpp movgen/../primitives/common.hpp \
+ movgen/../primitives/common.hpp tt.hpp core/eval.hpp \
+ core/../primitives/common.hpp cli.hpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ searchstack.hpp core/searchworker.hpp core/../searchstack.hpp \
+ core/../board/board.hpp core/search_common.hpp core/routine.hpp \
+ core/../movepicker.hpp core/../movgen/generate.hpp \
+ core/../movgen/../primitives/common.hpp nnue/nnue.h
+zobrist.o: zobrist.cpp zobrist.hpp primitives/common.hpp
+perft.o: perft.cpp perft.hpp movgen/generate.hpp \
+ movgen/../primitives/common.hpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ board/../primitives/common.hpp
+tt.o: tt.cpp tt.hpp primitives/common.hpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ board/../primitives/common.hpp
+board.o: board/board.cpp board/board.hpp board/../primitives/common.hpp \
+ board/../primitives/bitboard.hpp board/../primitives/common.hpp \
+ board/../zobrist.hpp board/../primitives/common.hpp \
+ board/../movgen/attack.hpp board/../movgen/../primitives/bitboard.hpp \
+ board/../movgen/../primitives/common.hpp board/../primitives/utility.hpp \
+ board/../primitives/bitboard.hpp board/../core/eval.hpp \
+ board/../core/../primitives/common.hpp
+board_moves.o: board/board_moves.cpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ board/../primitives/common.hpp board/../zobrist.hpp \
+ board/../primitives/common.hpp board/../movgen/attack.hpp \
+ board/../movgen/../primitives/bitboard.hpp \
+ board/../movgen/../primitives/common.hpp
+load_fen.o: board/load_fen.cpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ board/../primitives/common.hpp board/../parse_helpers.hpp \
+ board/../primitives/utility.hpp board/../primitives/bitboard.hpp \
+ board/../zobrist.hpp board/../primitives/common.hpp
+validate.o: board/validate.cpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ board/../primitives/common.hpp board/../zobrist.hpp \
+ board/../primitives/common.hpp
+see.o: board/see.cpp board/board.hpp board/../primitives/common.hpp \
+ board/../primitives/bitboard.hpp board/../primitives/common.hpp \
+ board/../movgen/attack.hpp board/../movgen/../primitives/bitboard.hpp \
+ board/../movgen/../primitives/common.hpp board/../core/eval.hpp \
+ board/../core/../primitives/common.hpp
+attack.o: movgen/attack.cpp movgen/attack.hpp \
+ movgen/../primitives/bitboard.hpp movgen/../primitives/common.hpp \
+ movgen/../primitives/common.hpp
+magic.o: movgen/magic.cpp movgen/attack.hpp \
+ movgen/../primitives/bitboard.hpp movgen/../primitives/common.hpp \
+ movgen/../primitives/common.hpp
+generate.o: movgen/generate.cpp movgen/generate.hpp \
+ movgen/../primitives/common.hpp movgen/../primitives/bitboard.hpp \
+ movgen/../primitives/common.hpp movgen/../board/board.hpp \
+ movgen/../board/../primitives/common.hpp \
+ movgen/../board/../primitives/bitboard.hpp movgen/attack.hpp
+utility.o: primitives/utility.cpp primitives/utility.hpp \
+ primitives/common.hpp primitives/bitboard.hpp \
+ primitives/../parse_helpers.hpp primitives/../board/board.hpp \
+ primitives/../board/../primitives/common.hpp \
+ primitives/../board/../primitives/bitboard.hpp
+eval.o: core/eval.cpp core/eval.hpp core/../primitives/common.hpp \
+ core/../board/board.hpp core/../board/../primitives/common.hpp \
+ core/../board/../primitives/bitboard.hpp \
+ core/../board/../primitives/common.hpp core/../nnue/nnue.h
+tree.o: tree.cpp tree.hpp primitives/common.hpp primitives/utility.hpp \
+ primitives/common.hpp primitives/bitboard.hpp
+searchstack.o: searchstack.cpp searchstack.hpp primitives/common.hpp \
+ board/board.hpp board/../primitives/common.hpp \
+ board/../primitives/bitboard.hpp board/../primitives/common.hpp
+movepicker.o: movepicker.cpp movepicker.hpp movgen/generate.hpp \
+ movgen/../primitives/common.hpp board/board.hpp \
+ board/../primitives/common.hpp board/../primitives/bitboard.hpp \
+ board/../primitives/common.hpp
+cli.o: cli.cpp cli.hpp board/board.hpp board/../primitives/common.hpp \
+ board/../primitives/bitboard.hpp board/../primitives/common.hpp \
+ searchstack.hpp primitives/common.hpp core/searchworker.hpp \
+ core/../primitives/common.hpp core/../searchstack.hpp \
+ core/../board/board.hpp core/search_common.hpp core/routine.hpp \
+ core/../movepicker.hpp core/../movgen/generate.hpp \
+ core/../movgen/../primitives/common.hpp primitives/utility.hpp \
+ primitives/common.hpp primitives/bitboard.hpp tree.hpp tt.hpp
+searchworker.o: core/searchworker.cpp core/searchworker.hpp \
+ core/../primitives/common.hpp core/../searchstack.hpp \
+ core/../primitives/common.hpp core/../board/board.hpp \
+ core/../board/../primitives/common.hpp \
+ core/../board/../primitives/bitboard.hpp \
+ core/../board/../primitives/common.hpp core/search_common.hpp \
+ core/routine.hpp core/../movepicker.hpp core/../movgen/generate.hpp \
+ core/../movgen/../primitives/common.hpp core/../cli.hpp \
+ core/../board/board.hpp core/../searchstack.hpp \
+ core/../core/searchworker.hpp core/eval.hpp \
+ core/../primitives/utility.hpp core/../primitives/common.hpp \
+ core/../primitives/bitboard.hpp core/../tree.hpp core/../tt.hpp
+misc.o: nnue/misc.cpp nnue/misc.h
+nnue.o: nnue/nnue.cpp nnue/../core/eval.hpp \
+ nnue/../core/../primitives/common.hpp nnue/misc.h nnue/nnue.h

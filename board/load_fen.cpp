@@ -13,16 +13,16 @@ bool Board::load_fen(std::string_view fen) {
             if (fen.empty())
                 return false;
 
-            char ch = fen.front();
+            const char ch = fen.front();
 
-            Square s = make_square(File(f), Rank(r));
+            const Square s = make_square(static_cast<File>(f), static_cast<Rank>(r));
             if (is_digit(fen.front())) {
-                f = File(f + ch - '1');
+                f = static_cast<File>(f + ch - '1');
                 fen = fen.substr(1);
                 continue;
             }
 
-            Piece p = piece_from_str(fen);
+            const Piece p = piece_from_str(fen);
             if (!is_ok(p))
                 return false;
             put_piece(p, s);
@@ -47,7 +47,7 @@ bool Board::load_fen(std::string_view fen) {
     case 'w': side_to_move_ = WHITE; break;
     case 'b': side_to_move_ = BLACK; break;
     default: return false;
-    };
+    }
 
     if (side_to_move_ == BLACK)
         key_ ^= ZOBRIST.side;
@@ -67,5 +67,4 @@ bool Board::load_fen(std::string_view fen) {
 
     return true;
 }
-
 

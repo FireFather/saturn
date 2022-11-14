@@ -16,32 +16,32 @@ public:
 
     /*
      * Check that the board contains valid information
-     * and everyting is synchronized
+     * and everything is synchronized
      * */
     void validate() const;
 
-    Board do_move(Move m) const;
-    Board do_null_move() const;
+    [[nodiscard]] Board do_move(Move m) const;
+    [[nodiscard]] Board do_null_move() const;
 
     /*
      * Used for:
      * 1. Checking moves probed from TT
      * 2. Checking moves from various move ordering structures
      * */
-    bool is_valid_move(Move m) const;
+    [[nodiscard]] bool is_valid_move(Move m) const;
 
-    bool see_ge(Move m, int threshold = 0) const;
+    [[nodiscard]] bool see_ge(Move m, int threshold = 0) const;
 
-    bool is_quiet(Move m) const;
+    [[nodiscard]] bool is_quiet(Move m) const;
 
     void update_pin_info();
 
-    uint64_t mat_key() const;
-    bool is_material_draw() const;
-    bool has_nonpawns(Color c) const;
+    [[nodiscard]] uint64_t mat_key() const;
+    [[nodiscard]] bool is_material_draw() const;
+    [[nodiscard]] bool has_nonpawns(Color c) const;
 
-    Bitboard attackers_to(Color atk_side, Square s, Bitboard blockers) const;
-    Bitboard attackers_to(Square s, Bitboard blockers) const;
+    [[nodiscard]] Bitboard attackers_to(Color c, Square s, Bitboard blockers) const;
+    [[nodiscard]] Bitboard attackers_to(Square s, Bitboard blockers) const;
 
     template<bool Checkers>
     Bitboard slider_blockers(Bitboard sliders, Square s,
@@ -50,32 +50,32 @@ public:
     void put_piece(Piece p, Square s);
     void remove_piece(Square s);
 
-    Bitboard pieces() const;
-    Bitboard pieces(Color c) const;
+    [[nodiscard]] Bitboard pieces() const;
+    [[nodiscard]] Bitboard pieces(Color c) const;
 
-    Bitboard pieces(PieceType pt) const;
-    Bitboard pieces(PieceType pt1, PieceType pt2) const;
+    [[nodiscard]] Bitboard pieces(PieceType pt) const;
+    [[nodiscard]] Bitboard pieces(PieceType pt1, PieceType pt2) const;
 
-    Bitboard pieces(Color c, PieceType pt) const;
-    Bitboard pieces(Color c, PieceType pt1, PieceType pt2) const;
+    [[nodiscard]] Bitboard pieces(Color c, PieceType pt) const;
+    [[nodiscard]] Bitboard pieces(Color c, PieceType pt1, PieceType pt2) const;
 
-    Piece piece_on(Square s) const;
+    [[nodiscard]] Piece piece_on(Square s) const;
 
-    Bitboard checkers() const;
-    Bitboard blockers_for_king(Color c) const;
-    Bitboard pinners(Color c) const;
+    [[nodiscard]] Bitboard checkers() const;
+    [[nodiscard]] Bitboard blockers_for_king(Color c) const;
+    [[nodiscard]] Bitboard pinners(Color c) const;
 
-    Square king_square(Color c) const;
+    [[nodiscard]] Square king_square(Color c) const;
 
-    Color side_to_move() const;
-    Square en_passant() const;
-    CastlingRights castling() const;
+    [[nodiscard]] Color side_to_move() const;
+    [[nodiscard]] Square en_passant() const;
+    [[nodiscard]] CastlingRights castling() const;
 
-    uint64_t key() const;
+    [[nodiscard]] uint64_t key() const;
 
     //returns number of moves since last capture/pawn move
-    uint8_t half_moves() const;
-    uint8_t plies_from_null() const;
+    [[nodiscard]] uint8_t half_moves() const;
+    [[nodiscard]] uint8_t plies_from_null() const;
 
 private:
     Bitboard pieces_[PIECE_TYPE_NB];

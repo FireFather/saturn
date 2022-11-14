@@ -19,10 +19,9 @@ void Board::validate() const {
     //Now make sure pieces_ and pieces_on_ are synced
     //with combned_ and color_combined_
     for (Square s = SQ_A1; s <= SQ_H8; ++s) {
-        Bitboard sb = square_bb(s);
+	    const Bitboard sb = square_bb(s);
 
-        Piece p = pieces_on_[s];
-        if (p != NO_PIECE) {
+	    if (const Piece p = pieces_on_[s]; p != NO_PIECE) {
             assert(is_ok(p));
 
             assert(color_combined_[color_of(p)] & sb);
@@ -35,7 +34,6 @@ void Board::validate() const {
 
     //color_combined_, combined_, 
     //pieces_, pieces_on_ are synced
-
 
     //Let's see if castling_, side_to_move_,
     //end_passant_ are valid
@@ -61,15 +59,14 @@ void Board::validate() const {
     //En passant
     if (en_passant_ != SQ_NONE) {
         assert(is_ok(en_passant_));
-        Square s = make_square(file_of(en_passant_), 
-                relative_rank(~side_to_move_, RANK_4));
-        Piece p = pieces_on_[s];
+        const Square s = make_square(file_of(en_passant_), 
+                                     relative_rank(~side_to_move_, RANK_4));
+        const Piece p = pieces_on_[s];
 
         assert(p == make_piece(~side_to_move_, PAWN));
     }
 
     //castling_, side_to_move_, en_passant_ are valid
-
 
     //Check that there are kings on the board
     assert(popcnt(pieces(WHITE, KING)) == 1);
@@ -78,13 +75,13 @@ void Board::validate() const {
     //Make sure checkers_, blockers_for_king_ and pinners_
     //are vaild
 
-    Square stm_ksq = king_square(side_to_move_);
+    const Square stm_ksq = king_square(side_to_move_);
 
-    Bitboard attackers = attackers_to(~side_to_move_, stm_ksq, combined_);
+    const Bitboard attackers = attackers_to(~side_to_move_, stm_ksq, combined_);
     assert(attackers == checkers_); 
     //checkers are ok
 
-    Bitboard sliders = pieces_[BISHOP] | pieces_[ROOK] 
+    const Bitboard sliders = pieces_[BISHOP] | pieces_[ROOK] 
         | pieces_[QUEEN];
     Bitboard pinners[COLOR_NB];
     Bitboard blockers[COLOR_NB];
@@ -101,12 +98,10 @@ void Board::validate() const {
     assert(pinners_[BLACK] == pinners[BLACK]);
     //pinners are ok
 
-
     //Finally, let's see if the zobrist key is correct
     uint64_t k = 0;
     for (Square s = SQ_A1; s <= SQ_H8; ++s) {
-        Piece p = piece_on(s);
-        if (p != NO_PIECE)
+	    if (const Piece p = piece_on(s); p != NO_PIECE)
             k ^= ZOBRIST.psq[p][s];
     }
 

@@ -1,5 +1,6 @@
 #include "eval.hpp"
 #include "../board/board.hpp"
+#include "../nnue/nnue.h"
 
 //Copypasted from
 //https://www.chessprogramming.org/PeSTO%27s_Evaluation_Function
@@ -139,7 +140,7 @@ constexpr int16_t eg_king_table[64] = {
     -53, -34, -21, -11, -28, -14, -24, -43
 };
 
-constexpr int16_t gamephaseInc[PIECE_TYPE_NB] = {
+[[maybe_unused]] constexpr int16_t gamephaseInc[PIECE_TYPE_NB] = {
     0, 0, 1, 1, 2, 4, 0
 };
 
@@ -160,14 +161,14 @@ void init_ps_tables() {
         eg_king_table
     };
 
-    for (PieceType pt: ALL_PTYPES) {
+    for (const PieceType pt: ALL_PTYPES) {
         for (Square sq = SQ_A1; sq <= SQ_H8; ++sq) {
-            mg_table[pt][sq] = mg_value[pt] + mg_pst_table[pt][sq];
-            eg_table[pt][sq] = eg_value[pt] + eg_pst_table[pt][sq];
+            mg_table[pt][sq] = static_cast<int16_t>(mg_value[pt] + mg_pst_table[pt][sq]);
+            eg_table[pt][sq] = static_cast<int16_t>(eg_value[pt] + eg_pst_table[pt][sq]);
         }
     }
 }
-
+/*
 int16_t evaluate(const Board &b) {
     Color us = b.side_to_move(), them = ~us;
     int game_phase = 0;
@@ -200,4 +201,130 @@ int16_t evaluate(const Board &b) {
     int eg_phase = 24 - mg_phase;
     return (mg_score * mg_phase + eg_score * eg_phase) / 24;
 }
+*/
 
+/*
+* Piece codes are
+*     wking=1, wqueen=2, wrook=3, wbishop= 4, wknight= 5, wpawn= 6,
+*     bking=7, bqueen=8, brook=9, bbishop=10, bknight=11, bpawn=12,
+*
+* Squares are
+*     A1=0, B1=1 ... H8=63
+*
+* Input format:
+*     piece[0] is white king, Square[0] is its location
+*     piece[1] is black king, Square[1] is its location
+*     ..
+*     piece[x], Square[x] can be in any order
+*     ..
+*     piece[n+1] is set to 0 to represent end of array
+*
+* Returns
+*   Score relative to side to move in approximate centipawns
+*/
+
+/* fire:
+w_king = 1, w_pawn = 2, w_knight = 3, w_bishop = 4, w_rook = 5, w_queen = 6
+b_king = 9, b_pawn = 10, b_knight = 11, b_bishop = 12, b_rook = 13, b_queen = 14
+
+*/
+/* saturn:
+PAWN = 1 (B_PAWN = PAWN + 8)
+W_PAWN = 1, W_KNIGHT = 2, W_BISHOP = 3, W_ROOK = 4, W_QUEEN = 5, W_KING = 6, 
+B_PAWN = 9, B_KNIGHT = 10, B_BISHOP = 11, B_ROOK = 12, B_QUEEN = 13,  B_KING = 14,
+*/
+
+/* nnue
+wking = 1, wqueen = 2,wrook = 3, wbishop = 4, wknight = 5,wpawn = 6, 
+bking = 7, bqueen = 8, brook = 9, bbishop = 10, bknight = 11, bpawn = 12,
+*/
+
+// builds pieces & squares arrays as required by nnue specs above
+int eval_nnue(const Board& pos)
+{
+    int pieces[33]{};
+    int squares[33]{};
+    int index = 2;
+    for (uint8_t i = 0; i < 64; i++)
+    {
+        if (pos.piece_on(static_cast<Square>(i)) == 6)
+        {
+            pieces[0] = 1;
+            squares[0] = i;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 14)
+        {
+            pieces[1] = 7;
+            squares[1] = i;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 1)
+        {
+            pieces[index] = 6;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 2)
+        {
+            pieces[index] = 5;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 3)
+        {
+            pieces[index] = 4;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 4)
+        {
+            pieces[index] = 3;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 5)
+        {
+            pieces[index] = 2;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 9)
+        {
+            pieces[index] = 12;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 10)
+        {
+            pieces[index] = 11;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 11)
+        {
+            pieces[index] = 10;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 12)
+        {
+            pieces[index] = 9;
+            squares[index] = i;
+            index++;
+        }
+        else if (pos.piece_on(static_cast<Square>(i)) == 13)
+        {
+            pieces[index] = 8;
+            squares[index] = i;
+            index++;
+        }
+    }
+
+    const int nnue_score = nnue_evaluate(pos.side_to_move(), pieces, squares);
+    return nnue_score;
+}
+
+int16_t evaluate(const Board& pos)
+{
+    const int nnue_score = eval_nnue(pos);
+    return static_cast<int16_t>(nnue_score);
+}

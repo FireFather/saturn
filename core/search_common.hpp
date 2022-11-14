@@ -19,7 +19,7 @@ struct SearchStats {
 using TimePoint = std::chrono::milliseconds::rep;
 namespace timer {
     inline TimePoint now() {
-        auto time = std::chrono::steady_clock::now()
+	    const auto time = std::chrono::steady_clock::now()
             .time_since_epoch();
         return std::chrono::duration_cast<
             std::chrono::milliseconds>(time).count();
@@ -39,8 +39,8 @@ struct TimeMan {
     TimePoint start;
     TimePoint max_time;
 
-    void init(const SearchLimits &limits, 
-            Color us, int ply) 
+    void init(const SearchLimits &limits,
+              const Color us, const int ply) 
     {
         (void)(ply);
         if (limits.infinite) return;
@@ -55,7 +55,7 @@ struct TimeMan {
         max_time = time;
     }
 
-    bool out_of_time() const { 
+    [[nodiscard]] bool out_of_time() const { 
         return timer::now() - start >= max_time;
     }
 };

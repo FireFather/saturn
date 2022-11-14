@@ -1,6 +1,8 @@
 #ifndef MOVEPICKER_HPP
 #define MOVEPICKER_HPP
 
+#include <array>
+
 #include "movgen/generate.hpp"
 
 enum class Stage {
@@ -35,7 +37,7 @@ struct Histories {
     void update(const Board &b, Move bm, int depth,
             const Move *quiets, int nq);
 
-    int16_t get_score(const Board &b, Move m) const;
+    [[nodiscard]] int16_t get_score(const Board &b, Move m) const;
 };
 
 class MovePicker {
@@ -51,11 +53,11 @@ public:
     template<bool qmoves>
     Move next();
 
-    Stage stage() const;
+    [[nodiscard]] Stage stage() const;
 
 private:
-    void score_tactical();
-    void score_nontactical();
+    void score_tactical() const;
+    void score_nontactical() const;
 
     struct AnyMove {
         bool operator()() const { return true; }
@@ -65,7 +67,7 @@ private:
     Move select(F &&filter = AnyMove());
 
     const Board &board_;
-    ExtMove moves_[MAX_MOVES];
+    ExtMove moves_[MAX_MOVES]{};
     ExtMove *cur_{}, *end_bad_caps_{}, *end_{};
 
     Move ttm_{}, counter_{}, followup_{};

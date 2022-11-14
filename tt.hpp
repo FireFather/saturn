@@ -27,7 +27,7 @@ struct TTEntry {
         };
     };
 
-    int score(int ply) const;
+    [[nodiscard]] int score(int ply) const;
 
     TTEntry() = default;
     TTEntry(uint64_t key, int score, Bound b, int depth, 
@@ -43,18 +43,18 @@ public:
     TranspositionTable() = default;
 
     void resize(size_t mbs);
-    void clear();
+    void clear() const;
 
     void new_search();
 
     bool probe(uint64_t key, TTEntry &e) const;
-    void store(TTEntry entry);
+    void store(TTEntry entry) const;
 
-    int extract_pv(Board b, Move *pv, int len);
+    int extract_pv(Board b, Move *pv, int len) const;
 
     void prefetch(uint64_t key) const;
 
-    uint64_t hashfull() const;
+    [[nodiscard]] uint64_t hashfull() const;
 
     ~TranspositionTable();
 

@@ -11,8 +11,8 @@ std::ostream& operator<<(std::ostream& os, const Node &n) {
     os << "( "
        << n.played << ", " 
        << "[ " << n.alpha << ", " << n.beta << " ], "
-       << n.score << ", " << int(n.depth) << ", " 
-       << int(n.ply) << " )";
+       << n.score << ", " << static_cast<int>(n.depth) << ", " 
+       << static_cast<int>(n.ply) << " )";
     return os;
 }
 
@@ -60,14 +60,14 @@ size_t Tree::size() const { return nodes.size(); }
 
 const Node& Tree::root() const { return nodes[0]; }
 
-size_t Tree::first_child(size_t node_idx) const {
+size_t Tree::first_child(const size_t node_idx) const {
     if (!nodes[node_idx].subtree_size)
         return npos;
     return node_idx + 1;
 }
 
-size_t Tree::next_child(size_t cur_idx) const {
-    size_t next_idx = cur_idx + nodes[cur_idx].subtree_size + 1;
+size_t Tree::next_child(const size_t cur_idx) const {
+	const size_t next_idx = cur_idx + nodes[cur_idx].subtree_size + 1;
 
     if (next_idx >= size() 
             || nodes[next_idx].ply != nodes[cur_idx].ply)
@@ -75,7 +75,7 @@ size_t Tree::next_child(size_t cur_idx) const {
     return next_idx;
 }
 
-size_t Tree::parent(size_t node_idx) const {
+size_t Tree::parent(const size_t node_idx) const {
     if (node_idx >= size())
         return npos;
 
@@ -83,8 +83,7 @@ size_t Tree::parent(size_t node_idx) const {
     size_t idx = 0;
 
     while (idx != npos && idx != node_idx) {
-        size_t last = idx + nodes[idx].subtree_size;
-        if (node_idx <= last) {
+	    if (const size_t last = idx + nodes[idx].subtree_size; node_idx <= last) {
             parent = idx;
             idx = first_child(parent);
             continue;
@@ -106,7 +105,7 @@ void Tree::pretty_print(std::ostream &os) const {
     }
 }
 
-void Tree::pretty_print(std::ostream &os, size_t parent) const {
+void Tree::pretty_print(std::ostream &os, const size_t parent) const {
     os << nodes[parent] << '\n';
 
     size_t child = first_child(parent);
@@ -135,14 +134,14 @@ void Tree::json(std::ostream &os) const {
     os << "]\n";
 }
 
-void Tree::json(std::ostream &os, size_t parent) const {
+void Tree::json(std::ostream &os, const size_t parent) const {
     const Node &n = nodes[parent];
     os << "{\"move\": \"" << n.played << "\",\n"
        << "\"alpha\": " << n.alpha << ",\n"
        << "\"beta\": " << n.beta << ",\n"
        << "\"score\": " << n.score << ",\n"
-       << "\"depth\": " << int(n.depth) << ",\n"
-       << "\"ply\": " << int(n.ply) << ",\n"
+       << "\"depth\": " << static_cast<int>(n.depth) << ",\n"
+       << "\"ply\": " << static_cast<int>(n.ply) << ",\n"
        << "\"children\":";
 
     size_t child = first_child(parent);

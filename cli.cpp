@@ -1,7 +1,7 @@
 #include "cli.hpp"
 #include "primitives/utility.hpp"
 #include <algorithm>
-#include <cstring>
+#include <cassert>
 #include <sstream>
 #include "tree.hpp"
 #include "tt.hpp"
@@ -9,7 +9,7 @@
 namespace {
 
 template<bool root>
-void print_tree(std::vector<size_t> &nodes, size_t parent, int depth) {
+void print_tree(std::vector<size_t> &nodes, const size_t parent, const int depth) {
     if (!root) {
         nodes.push_back(parent);
         std::cout << g_tree.nodes[parent] << '\n';
@@ -46,26 +46,26 @@ void tree_walker() {
 
         if (token == "quit")
             break;
-        else if (token == "setd")
-            std::cin >> depth;
+        if (token == "setd")
+	        std::cin >> depth;
         else if (token == "d")
-            std::cout << depth << '\n';
+	        std::cout << depth << '\n';
         else if (token == "sel") {
-            std::cin >> token;
-            for (size_t i: nodes) {
-                ss.str("");
-                ss.clear();
-                ss << g_tree.nodes[i].played;
-                if (ss.str() == token) {
-                    parent = i;
-                    break;
-                }
-            }
+	        std::cin >> token;
+	        for (const size_t i: nodes) {
+		        ss.str("");
+		        ss.clear();
+		        ss << g_tree.nodes[i].played;
+		        if (ss.str() == token) {
+			        parent = i;
+			        break;
+		        }
+	        }
 
         } else if (token == "root") {
-            parent = Tree::npos;
+	        parent = Tree::npos;
         } else if (token == "up") {
-            parent = g_tree.parent(parent);
+	        parent = g_tree.parent(parent);
         }
     }
 }
@@ -85,7 +85,7 @@ std::istream& operator>>(std::istream &is, UciSpin &spin) {
 }
 
 std::ostream& operator<<(std::ostream &os, const UciOption &opt) {
-    auto flags = os.flags();
+	const auto flags = os.flags();
 
     os << std::boolalpha;
     std::visit([&os](auto &&arg) { os << arg; }, opt);
@@ -96,7 +96,7 @@ std::ostream& operator<<(std::ostream &os, const UciOption &opt) {
 }
 
 std::istream& operator>>(std::istream& is, UciOption &opt) {
-    auto flags = is.flags();
+	const auto flags = is.flags();
     is >> std::boolalpha;
 
     std::visit([&is](auto &&arg) { is >> arg; }, opt);
@@ -139,14 +139,15 @@ void UCIContext::enter_loop() {
 }
 
 void UCIContext::parse_position(std::istream &is) {
-    std::string s, fen;
+    std::string s;
     is >> s;
     st_.reset();
 
     if (s == "fen") {
-        while (is >> s && s != "moves")
+	    std::string fen;
+	    while (is >> s && s != "moves")
             fen += s + ' ';
-        bool result = board_.load_fen(fen);
+        const bool result = board_.load_fen(fen);
         assert(result);
     } else if (s == "startpos") {
         board_ = Board::start_pos();
@@ -159,7 +160,7 @@ void UCIContext::parse_position(std::istream &is) {
         return;
 
     while (is >> s) {
-        Move m = move_from_str(board_, s);
+	    const Move m = move_from_str(board_, s);
         if (m == MOVE_NONE)
             break;
         st_.push(board_.key(), m);
@@ -194,19 +195,19 @@ void UCIContext::parse_setopt(std::istream &is) {
     std::string name, op;
     is >> name >> name >> op;
     std::transform(name.begin(), name.end(), name.begin(),
-        [](char ch) { return std::tolower(ch); });
-    if (auto it = options_.find(name); it != options_.end()) {
+        [](const char ch) { return std::tolower(ch); });
+    if (const auto it = options_.find(name); it != options_.end()) {
         is >> it->second;
         update_option(name, op, it->second);
     }
 }
 
-void UCIContext::update_option(std::string_view name, 
-        std::string_view op, const UciOption &opt)
+void UCIContext::update_option(const std::string_view name,
+                               const std::string_view op, const UciOption &opt)
 {
     if (name == "hash") {
         if (op == "value") {
-            if (auto spin = std::get_if<UciSpin>(&opt); spin 
+            if (const auto spin = std::get_if<UciSpin>(&opt); spin 
                     && spin->value >= spin->min
                     && spin->value <= spin->max) 
             {
@@ -233,7 +234,7 @@ void UCIContext::print_info() {
     sync_cout() << "uciok\n";
 }
 
-int enter_cli(int argc, char **argv) {
+int enter_cli(const int argc, char **argv) {
     (void)(argc);
     (void)(argv);
 

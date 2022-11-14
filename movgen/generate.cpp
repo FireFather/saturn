@@ -4,12 +4,11 @@
 #include "../board/board.hpp"
 #include "attack.hpp"
 
-
 namespace {
 
 /*---------------------Pawn moves--------------------*/
 
-ExtMove* make_proms(Square from, Square to, ExtMove *moves) {
+ExtMove* make_proms(const Square from, const Square to, ExtMove *moves) {
     *moves++ = make<PROMOTION>(from, to, KNIGHT);
     *moves++ = make<PROMOTION>(from, to, BISHOP);
     *moves++ = make<PROMOTION>(from, to, ROOK);
@@ -17,15 +16,15 @@ ExtMove* make_proms(Square from, Square to, ExtMove *moves) {
     return moves;
 }
 
-bool legal_ep_move(const Board &b, Square from, Square to) {
-    Square cap_sq = make_square(file_of(to), rank_of(from));
-    Bitboard combined = b.pieces()
+bool legal_ep_move(const Board &b, const Square from, const Square to) {
+	const Square cap_sq = make_square(file_of(to), rank_of(from));
+	const Bitboard combined = b.pieces()
         ^ square_bb(cap_sq)
         ^ square_bb(from) 
         ^ square_bb(to);
 
-    Color us = b.side_to_move(), them = ~us;
-    Square ksq = b.king_square(us);
+	const Color us = b.side_to_move(), them = ~us;
+	const Square ksq = b.king_square(us);
     
     Bitboard bb = 0;
     bb |= attacks_bb<BISHOP>(ksq, combined) 
@@ -38,27 +37,27 @@ bool legal_ep_move(const Board &b, Square from, Square to) {
 
 template<GenType T, bool IN_CHECK>
 ExtMove* pawn_legals(const Board &b, ExtMove *moves) {
-    Color us = b.side_to_move(), them = ~us;
-    Square ksq = b.king_square(us);
+	const Color us = b.side_to_move(), them = ~us;
+    const Square ksq = b.king_square(us);
     Bitboard our_pawns = b.pieces(us, PAWN);
     if (!(T & TACTICAL))
         our_pawns &= ~relative_rank_bb(us, RANK_7);
 
-    Bitboard my_r3 = relative_rank_bb(us, RANK_3),
-             my_r8 = relative_rank_bb(us, RANK_8);
+	const Bitboard my_r3 = relative_rank_bb(us, RANK_3),
+	               my_r8 = relative_rank_bb(us, RANK_8);
 
-    Bitboard check_mask = ~Bitboard(0);
+    Bitboard check_mask = ~static_cast<Bitboard>(0);
     if (IN_CHECK) {
         check_mask = between_bb(ksq, lsb(b.checkers())) 
             | b.checkers();
     }
 
-    Bitboard pinned = b.blockers_for_king(us);
+    const Bitboard pinned = b.blockers_for_king(us);
     Bitboard pawns = our_pawns & ~pinned;
 
     //May be 2 loops: first for < 7th rank, second for 7th rank?
     while (pawns) {
-        Square from = pop_lsb(pawns);
+	    const Square from = pop_lsb(pawns);
 
         Bitboard dsts = pawn_pushes_bb(us, from) & ~b.pieces();
         if (!(T & NON_TACTICAL))
@@ -87,7 +86,7 @@ ExtMove* pawn_legals(const Board &b, ExtMove *moves) {
     if (!IN_CHECK) {
         pawns = our_pawns & pinned;
         while (pawns) {
-            Square from = pop_lsb(pawns);
+	        const Square from = pop_lsb(pawns);
 
             Bitboard dsts = 0;
             if (T & NON_TACTICAL) {
@@ -113,15 +112,13 @@ ExtMove* pawn_legals(const Board &b, ExtMove *moves) {
     }
 
     //branchy boiii
-    Square ep = b.en_passant();
-    if ((T & TACTICAL) && ep != SQ_NONE) {
-        Square to = ep;
-        Bitboard rbb = relative_rank_bb(us, RANK_5),
-            fbb = adjacent_files_bb(file_of(to));
+	if (const Square ep = b.en_passant(); (T & TACTICAL) && ep != SQ_NONE) {
+	    const Square to = ep;
+	    const Bitboard rbb = relative_rank_bb(us, RANK_5),
+	                   fbb = adjacent_files_bb(file_of(to));
         Bitboard bb = our_pawns & rbb & fbb;
         while (bb) {
-            Square from = pop_lsb(bb);
-            if (legal_ep_move(b, from, to))
+	        if (const Square from = pop_lsb(bb); legal_ep_move(b, from, to))
                 *moves++ = make<EN_PASSANT>(from, to);
         }
     }
@@ -131,16 +128,15 @@ ExtMove* pawn_legals(const Board &b, ExtMove *moves) {
 
 /*----------------End of pawn moves------------------*/
 
-
 /*-------------------Knight moves--------------------*/
 
 template<GenType T, bool IN_CHECK>
 ExtMove* knight_legals(const Board &b, ExtMove *moves) {
-    Color us = b.side_to_move(), them = ~us;
+	const Color us = b.side_to_move(), them = ~us;
 
-    Bitboard our_knights = b.pieces(us, KNIGHT);
-    Bitboard pinned = b.blockers_for_king(us);
-    Square ksq = b.king_square(us);
+    const Bitboard our_knights = b.pieces(us, KNIGHT);
+    const Bitboard pinned = b.blockers_for_king(us);
+    const Square ksq = b.king_square(us);
 
     Bitboard mask = 0;
     if (T & TACTICAL)
@@ -153,7 +149,7 @@ ExtMove* knight_legals(const Board &b, ExtMove *moves) {
 
     Bitboard bb = our_knights & ~pinned;
     while (bb) {
-        Square from = pop_lsb(bb);
+	    const Square from = pop_lsb(bb);
         Bitboard dsts = attacks_bb<KNIGHT>(from) & mask;
         while (dsts)
             *moves++ = make_move(from, pop_lsb(dsts));
@@ -164,18 +160,17 @@ ExtMove* knight_legals(const Board &b, ExtMove *moves) {
 
 /*----------------End of knight moves----------------*/
 
-
 /*-------------------Slider moves--------------------*/
 
 template<GenType T, PieceType P, bool IN_CHECK>
 ExtMove* slider_legals(const Board &b, ExtMove *moves) {
     static_assert(P == BISHOP || P == ROOK || P == QUEEN);
 
-    Color us = b.side_to_move(), them = ~us;
+    const Color us = b.side_to_move(), them = ~us;
 
-    Bitboard our_sliders = b.pieces(us, P);
-    Square ksq = b.king_square(us);
-    Bitboard pinned = b.blockers_for_king(us);
+    const Bitboard our_sliders = b.pieces(us, P);
+    const Square ksq = b.king_square(us);
+    const Bitboard pinned = b.blockers_for_king(us);
 
     Bitboard mask = 0;
     if (T & TACTICAL)
@@ -210,23 +205,21 @@ ExtMove* slider_legals(const Board &b, ExtMove *moves) {
 
 /*--------------- End of slider moves----------------*/
 
-
 /*--------------------King moves--------------------*/
 
-bool legal_king_move(const Board &b, Square to) {
-    Color us = b.side_to_move(), them = ~us;
+bool legal_king_move(const Board &b, const Square to) {
+	const Color us = b.side_to_move(), them = ~us;
 
-    Bitboard kbb = b.pieces(us, KING);
-    Bitboard combined = b.pieces() ^ kbb;
+    const Bitboard kbb = b.pieces(us, KING);
+    const Bitboard combined = b.pieces() ^ kbb;
 
     return !b.attackers_to(them, to, combined);
 }
 
-
 template<GenType T, bool IN_CHECK>
 ExtMove* king_legals(const Board &b, ExtMove *moves) {
-    Color us = b.side_to_move(), them = ~us;
-    Square from = b.king_square(us);
+	const Color us = b.side_to_move(), them = ~us;
+    const Square from = b.king_square(us);
 
     Bitboard mask = 0;
     if (T & TACTICAL)
@@ -236,8 +229,7 @@ ExtMove* king_legals(const Board &b, ExtMove *moves) {
 
     Bitboard bb = attacks_bb<KING>(from) & mask;
     while (bb) {
-        Square to = pop_lsb(bb);
-        if (legal_king_move(b, to))
+	    if (const Square to = pop_lsb(bb); legal_king_move(b, to))
             *moves++ = make_move(from, to);
     }
 
@@ -246,19 +238,19 @@ ExtMove* king_legals(const Board &b, ExtMove *moves) {
     if (!(T & NON_TACTICAL))
         return moves;
 
-    CastlingRights cr = b.castling();
-    Bitboard kingside_mask = KINGSIDE_MASK[us];
-    Bitboard queenside_mask = QUEENSIDE_MASK[us];
+    const CastlingRights cr = b.castling();
+    const Bitboard kingside_mask = KINGSIDE_MASK[us];
+    const Bitboard queenside_mask = QUEENSIDE_MASK[us];
 
     if (cr & kingside_rights(us) && !(b.pieces() & kingside_mask)) {
-        Square middle = Square(from + 1), right = Square(from + 2);
-        if (legal_king_move(b, middle) && legal_king_move(b, right))
+	    const auto right = static_cast<Square>(from + 2);
+        if (const auto middle = static_cast<Square>(from + 1); legal_king_move(b, middle) && legal_king_move(b, right))
             *moves++ = make<CASTLING>(from, right);
     }
     
     if (cr & queenside_rights(us) && !(b.pieces() & queenside_mask)) {
-        Square middle = Square(from - 1), left = Square(from - 2);
-        if (legal_king_move(b, middle) && legal_king_move(b, left))
+	    const auto left = static_cast<Square>(from - 2);
+        if (const auto middle = static_cast<Square>(from - 1); legal_king_move(b, middle) && legal_king_move(b, left))
             *moves++ = make<CASTLING>(from, left);
     }
 

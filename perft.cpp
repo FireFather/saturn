@@ -25,9 +25,9 @@ constexpr int N = static_cast<int>(std::size(PERFT_RESULTS));
 
 } //namespace
 
-uint64_t perft(const Board &b, int depth) {
-    ExtMove begin[MAX_MOVES], *end;
-    end = generate<LEGAL>(b, begin);
+uint64_t perft(const Board &b, const int depth) {
+    ExtMove begin[MAX_MOVES];
+    const ExtMove* end = generate<LEGAL>(b, begin);
 
     /* if (depth == 0) */
     /*     return 1; */
@@ -50,9 +50,10 @@ int perft_test_positions() {
     threads.reserve(N);
 
     for (int i = 0; i < N; ++i) {
-        threads.emplace_back([&results, i]() {
-            PerftResult pr = PERFT_RESULTS[i];
-            Board b;
+        threads.emplace_back([&results, i]
+        {
+	        const PerftResult pr = PERFT_RESULTS[i];
+            Board b{};
             if (!b.load_fen(pr.fen))
                 return;
             results[i] = perft(b, pr.depth);

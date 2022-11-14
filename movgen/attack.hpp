@@ -12,14 +12,13 @@ struct Magic {
     uint64_t factor;
     size_t offset;
 
-
-size_t rook_index(Bitboard blockers) const {
-    uint64_t index = (blockers & mask) * factor;
+    [[nodiscard]] size_t rook_index(const Bitboard blockers) const {
+	const uint64_t index = (blockers & mask) * factor;
     return (index >> (64 - 12)) + offset;
 }
 
-size_t bishop_index(Bitboard blockers) const {
-    uint64_t index = (blockers & mask) * factor;
+    [[nodiscard]] size_t bishop_index(const Bitboard blockers) const {
+	const uint64_t index = (blockers & mask) * factor;
     return (index >> (64 - 9)) + offset;
 }
 
@@ -39,18 +38,17 @@ extern Bitboard BETWEEN[SQUARE_NB][SQUARE_NB];
 
 } //namespace attack_tables
 
-
 void init_attack_tables();
 
 template<PieceType pt>
-Bitboard attacks_bb(Square sq) {
+Bitboard attacks_bb(const Square sq) {
     static_assert(pt > PAWN && pt <= KING);
     assert(is_ok(sq));
     return attack_tables::PSEUDO_ATTACKS[pt][sq];
 }
 
 template<PieceType pt>
-Bitboard attacks_bb(Square sq, Bitboard blockers) {
+Bitboard attacks_bb(const Square sq, const Bitboard blockers) {
     namespace at = attack_tables;
     static_assert(pt > PAWN && pt <= KING);
     switch (pt) {
@@ -65,7 +63,7 @@ Bitboard attacks_bb(Square sq, Bitboard blockers) {
             | attacks_bb<ROOK>(sq, blockers);
     default: //KING
         return attacks_bb<pt>(sq);
-    };
+    }
 }
 
 /* Bitboard attacks_bb(PieceType pt, Square sq, Bitboard blockers); */
@@ -76,8 +74,7 @@ Bitboard attacks_bb(Square sq, Bitboard blockers) {
 /* Bitboard line_bb(Square s1, Square s2); */
 /* Bitboard between_bb(Square s1, Square s2); */
 
-
-inline Bitboard attacks_bb(PieceType pt, Square sq, Bitboard blockers) {
+inline Bitboard attacks_bb(const PieceType pt, const Square sq, const Bitboard blockers) {
     assert(pt > PAWN && pt <= KING && is_ok(sq));
     switch (pt) {
     case BISHOP:
@@ -87,31 +84,29 @@ inline Bitboard attacks_bb(PieceType pt, Square sq, Bitboard blockers) {
     case QUEEN:
         return attacks_bb<QUEEN>(sq, blockers);
     default: //KING
-        return attacks_bb<KING>(sq);;
-    };
+        return attacks_bb<KING>(sq);
+    }
 }
 
-inline Bitboard pawn_attacks_bb(Color c, Square sq) {
+inline Bitboard pawn_attacks_bb(const Color c, const Square sq) {
     assert(is_ok(c) && is_ok(sq));
     return attack_tables::PAWN_ATTACKS[c][sq];
 
 }
 
-inline Bitboard pawn_pushes_bb(Color c, Square sq) {
+inline Bitboard pawn_pushes_bb(const Color c, const Square sq) {
     assert(is_ok(c) && is_ok(sq));
     return attack_tables::PAWN_PUSHES[c][sq];
 }
 
-inline Bitboard line_bb(Square s1, Square s2) {
+inline Bitboard line_bb(const Square s1, const Square s2) {
     assert(is_ok(s1) && is_ok(s2));
     return attack_tables::LINE[s1][s2];
 }
 
-inline Bitboard between_bb(Square s1, Square s2) {
+inline Bitboard between_bb(const Square s1, const Square s2) {
     assert(is_ok(s1) && is_ok(s2));
     return attack_tables::BETWEEN[s1][s2];
 }
-
-
 
 #endif

@@ -14,10 +14,12 @@ public:
     void start(std::function<void()> f) {
         terminate_.store(false, std::memory_order_relaxed);
         go_.store(false, std::memory_order_relaxed);
-        thread_ = std::thread([this, f]() {
+        thread_ = std::thread([this, f]
+        {
             while (!terminate_.load(std::memory_order_relaxed)) {
-                std::unique_lock<std::mutex> lock(mutex_);
-                cv_.wait(lock, [this]() { 
+                std::unique_lock lock(mutex_);
+                cv_.wait(lock, [this]
+                { 
                     return go_.load(std::memory_order_relaxed) 
                         || terminate_.load(std::memory_order_relaxed);
                 });
@@ -48,7 +50,7 @@ public:
     }
 
     void wait_for_completion() {
-        std::lock_guard<std::mutex> lck(mutex_);
+        std::lock_guard lck(mutex_);
     }
 
     void join() {

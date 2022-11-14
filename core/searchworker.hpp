@@ -20,16 +20,16 @@ public:
 
     void reset(const Board &root);
 
-    Move first() const;
+    [[nodiscard]] Move first() const;
     Move next();
     void update_last(int score, uint64_t nodes);
 
-    int num_moves() const;
+    [[nodiscard]] int num_moves() const;
 
     void complete_iter();
 
 private:
-    std::array<RootMove, MAX_MOVES> moves_;
+    std::array<RootMove, MAX_MOVES> moves_{};
     int cur_{}, num_moves_{};
 };
 
@@ -60,11 +60,11 @@ private:
     Stack stack_;
 
     RootMovePicker rmp_;
-    Histories hist_;
-    std::array<Move, 64 * 64> counters_;
-    std::array<Move, 64 * 64> followups_;
+    Histories hist_{};
+    std::array<Move, 64 * 64> counters_{};
+    std::array<Move, 64 * 64> followups_{};
 
-    TimeMan man_;
+    TimeMan man_{};
     SearchLimits limits_;
     SearchStats stats_;
 

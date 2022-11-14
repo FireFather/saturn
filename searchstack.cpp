@@ -2,7 +2,7 @@
 #include "board/board.hpp"
 #include <cstring>
 
-void Stack::set_start(int start) { 
+void Stack::set_start(const int start) { 
     start_ = start; 
 }
 
@@ -12,7 +12,7 @@ void Stack::reset() {
     memset(entries_.data(), 0, sizeof(entries_));
 }
 
-void Stack::push(uint64_t key, Move m, int16_t eval) {
+void Stack::push(const uint64_t key, const Move m, const int16_t eval) {
     entries_[height_++] = { 
         key, m, 
         { MOVE_NONE, MOVE_NONE }, 
@@ -25,7 +25,7 @@ void Stack::pop() {
     height_--;
 }
 
-Stack::Entry &Stack::at(int ply) {
+Stack::Entry &Stack::at(const int ply) {
     return entries_[start_ + ply];
 }
 
@@ -37,9 +37,9 @@ bool Stack::is_repetition(const Board &b) const {
     if (!height_)
         return false;
 
-    int halfmoves = std::min(b.half_moves(), 
-            b.plies_from_null());
-    int k = std::max(0, height_ - halfmoves);
+    const int halfmoves = std::min(b.half_moves(), 
+                                   b.plies_from_null());
+    const int k = std::max(0, height_ - halfmoves);
     for (int i = height_ - 2; i >= k; i -= 2)
         if (entries_[i].key == b.key())
             return true;

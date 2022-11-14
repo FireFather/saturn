@@ -34,7 +34,6 @@ struct Node {
     uint32_t subtree_size;
 };
 
-
 /*
  * The nodes are added according to the order of DFS (alpha_beta)
  * Using this invariant, we can store them this way:
@@ -52,22 +51,22 @@ struct Tree {
 
     void clear();
 
-    size_t begin_node(Move played, int16_t alpha, int16_t beta, 
-        uint8_t depth, uint8_t ply, NodeType nt = NodeType::NonTerminal);
+    static size_t begin_node(Move prev, int16_t alpha, int16_t beta, 
+                             uint8_t depth, uint8_t ply, NodeType nt = NodeType::NonTerminal);
 
-    void end_node(size_t node_idx, int16_t score);
+    static void end_node(size_t node_idx, int16_t score);
 
-    void set_last_type(NodeType ntp);
+    static void set_last_type(NodeType ntp);
 
-    size_t size() const;
+    [[nodiscard]] size_t size() const;
 
-    const Node& root() const;
-    
-    size_t first_child(size_t node_idx) const;
-    size_t next_child(size_t cur_idx) const;
+    [[nodiscard]] const Node& root() const;
+
+    [[nodiscard]] size_t first_child(size_t node_idx) const;
+    [[nodiscard]] size_t next_child(size_t cur_idx) const;
 
     //Walks the tree from the root
-    size_t parent(size_t node_idx) const;
+    [[nodiscard]] size_t parent(size_t node_idx) const;
 
     void pretty_print(std::ostream &os) const;
     void pretty_print(std::ostream &os, size_t parent) const;

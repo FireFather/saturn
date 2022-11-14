@@ -3,14 +3,13 @@
 
 #include "../primitives/common.hpp"
 #include <cstdint>
-#include <array>
 
 struct ExtMove {
     Move move;
     int16_t value;
 
     operator Move() const { return move; }
-    void operator=(Move m) { move = m; }
+    void operator=(const Move m) { move = m; }
 
     operator float() const = delete;
     operator int() const = delete;

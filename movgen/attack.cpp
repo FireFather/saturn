@@ -12,7 +12,6 @@ Bitboard PAWN_PUSHES[COLOR_NB][SQUARE_NB];
 Bitboard LINE[SQUARE_NB][SQUARE_NB];
 Bitboard BETWEEN[SQUARE_NB][SQUARE_NB];
 
-
 /* size_t Magic::rook_index(Bitboard blockers) const { */
 /*     uint64_t index = (blockers & mask) * factor; */
 /*     return (index >> (64 - 12)) + offset; */
@@ -62,13 +61,12 @@ namespace atta = attack_tables;
 /*     return atta::BETWEEN[s1][s2]; */
 /* } */
 
-
 class Dir {
 public:
-    Dir(Direction dir) : dir_(dir) {}
+    Dir(const Direction dir) : dir_(dir) {}
 
-    int next_index(int index) const {
-        int rank = index / 8 + SX[dir_], file = index % 8 + SY[dir_];
+    [[nodiscard]] int next_index(const int index) const {
+	    const int rank = index / 8 + SX[dir_], file = index % 8 + SY[dir_];
         return (rank >= 0 && file >= 0 && rank < 8 && file < 8) ? (rank * 8 + file) : -1;
     }
 
@@ -79,7 +77,7 @@ private:
     static constexpr int SY[DIRS_NB] = { 1, -1, 0, 0, 1, 1, -1, -1 };
 };
 
-static Bitboard gen_attacks(Square sq, Bitboard blockers, Dir d) {
+static Bitboard gen_attacks(const Square sq, const Bitboard blockers, const Dir d) {
     Bitboard bb = 0;
 
     for (int i = sq; (i = d.next_index(i)) != -1;) {
@@ -91,17 +89,18 @@ static Bitboard gen_attacks(Square sq, Bitboard blockers, Dir d) {
     return bb;
 }
 
-static Bitboard gen_rook_attacks(Square sq, Bitboard blockers) {
+static auto gen_rook_attacks(const Square sq, const Bitboard blockers) -> Bitboard
+{
     Bitboard bb = 0;
-    for (Dir d: { NORTH, SOUTH, EAST, WEST })
+    for (const Dir d: { NORTH, SOUTH, EAST, WEST })
         bb |= gen_attacks(sq, blockers, d);
 
     return bb;
 }
 
-static Bitboard gen_bishop_attacks(Square sq, Bitboard blockers) {
+static Bitboard gen_bishop_attacks(const Square sq, const Bitboard blockers) {
     Bitboard bb = 0;
-    for (Dir d: { NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST })
+    for (const Dir d: { NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST })
         bb |= gen_attacks(sq, blockers, d);
 
     return bb;
@@ -110,7 +109,7 @@ static Bitboard gen_bishop_attacks(Square sq, Bitboard blockers) {
 //enumerate all subsets
 //https://www.chessprogramming.org/Traversing_Subsets_of_a_Set
 template<typename F>
-void enum_subsets(F &f, Bitboard d) {
+void enum_subsets(F &f, const Bitboard d) {
     Bitboard n = 0;
     do {
         f(n);
@@ -118,13 +117,13 @@ void enum_subsets(F &f, Bitboard d) {
     } while (n);
 }
 
-Bitboard knight_attacks(Bitboard bb) {
-   Bitboard l1 = (bb >> 1) & ~FILE_H_BB;
-   Bitboard l2 = (bb >> 2) & ~(FILE_H_BB | FILE_G_BB);
-   Bitboard r1 = (bb << 1) & ~FILE_A_BB;
-   Bitboard r2 = (bb << 2) & ~(FILE_A_BB | FILE_B_BB);
-   Bitboard h1 = l1 | r1;
-   Bitboard h2 = l2 | r2;
+Bitboard knight_attacks(const Bitboard bb) {
+	const Bitboard l1 = (bb >> 1) & ~FILE_H_BB;
+	const Bitboard l2 = (bb >> 2) & ~(FILE_H_BB | FILE_G_BB);
+	const Bitboard r1 = (bb << 1) & ~FILE_A_BB;
+	const Bitboard r2 = (bb << 2) & ~(FILE_A_BB | FILE_B_BB);
+	const Bitboard h1 = l1 | r1;
+	const Bitboard h2 = l2 | r2;
    return (h1<<16) | (h1>>16) | (h2<<8) | (h2>>8);
 }
 
@@ -135,9 +134,8 @@ Bitboard king_attacks(Bitboard bb) {
     return attacks;
 }
 
-
 template<Color C>
-constexpr Bitboard pawn_attacks_bb(Bitboard bb) {
+constexpr Bitboard pawn_attacks_bb(const Bitboard bb) {
     return C == WHITE ? shift<NORTH_WEST>(bb) | shift<NORTH_EAST>(bb)
         : shift<SOUTH_WEST>(bb) | shift<SOUTH_EAST>(bb);
 }
@@ -157,23 +155,21 @@ constexpr Bitboard pawn_pushes_bb(Bitboard bb) {
     return pushes;
 }
 
-
 void init_attack_tables() {
     for (Square sq = SQ_A1; sq <= SQ_H8; ++sq) {
-        Bitboard sbb = square_bb(sq);
+	    const Bitboard sbb = square_bb(sq);
 
-        auto f = [sq](Bitboard blockers) {
-            size_t idx = atta::ROOK_MAGICS[sq].rook_index(blockers);
+        auto f = [sq](const Bitboard blockers) {
+	        const size_t idx = atta::ROOK_MAGICS[sq].rook_index(blockers);
             atta::ATTACKS[idx] = gen_rook_attacks(sq, blockers);
         };
         enum_subsets(f, atta::ROOK_MAGICS[sq].mask);
 
-        auto g = [sq](Bitboard blockers) {
-            size_t idx = atta::BISHOP_MAGICS[sq].bishop_index(blockers);
+        auto g = [sq](const Bitboard blockers) {
+	        const size_t idx = atta::BISHOP_MAGICS[sq].bishop_index(blockers);
             atta::ATTACKS[idx] = gen_bishop_attacks(sq, blockers);
         };
         enum_subsets(g, atta::BISHOP_MAGICS[sq].mask);
-
 
         atta::PAWN_ATTACKS[WHITE][sq] = pawn_attacks_bb<WHITE>(sbb);
         atta::PAWN_ATTACKS[BLACK][sq] = pawn_attacks_bb<BLACK>(sbb);
@@ -189,12 +185,10 @@ void init_attack_tables() {
     }
 
     for (Square s1 = SQ_A1; s1 <= SQ_H8; ++s1) {
-        Bitboard s1b = square_bb(s1);
-        for (PieceType p: { BISHOP, ROOK }) {
+	    const Bitboard s1b = square_bb(s1);
+        for (const PieceType p: { BISHOP, ROOK }) {
             for (Square s2 = SQ_A1; s2 <= SQ_H8; ++s2) {
-                Bitboard s2b = square_bb(s2);
-
-                if (attacks_bb(p, s1, 0) & s2b) {
+	            if (const Bitboard s2b = square_bb(s2); attacks_bb(p, s1, 0) & s2b) {
                     atta::LINE[s1][s2] = (attacks_bb(p, s1, 0) 
                             & attacks_bb(p, s2, 0)) | s1b | s2b;
                     atta::BETWEEN[s1][s2] = attacks_bb(p, s1, s2b) 

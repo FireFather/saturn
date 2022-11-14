@@ -2,15 +2,15 @@
 #include "../movgen/attack.hpp"
 #include "../core/eval.hpp"
 
-bool Board::see_ge(Move m, int threshold) const {
+bool Board::see_ge(const Move m, const int threshold) const {
     if (type_of(m) != NORMAL)
         return threshold >= 0;
 
-    auto value_on = [this](Square s) { 
+    auto value_on = [this](const Square s) { 
         return mg_value[type_of(piece_on(s))];
     };
 
-    Square from = from_sq(m), to = to_sq(m);
+    const Square from = from_sq(m), to = to_sq(m);
 
     int balance = value_on(to) - threshold;
     if (balance < 0)

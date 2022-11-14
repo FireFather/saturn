@@ -3,7 +3,11 @@
 
 #include <cstdint>
 //#undef NDEBUG
-#include <cassert>
+
+#ifdef _MSC_VER
+#else
+#pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
 
 /*---------Square, file and rank definitions---------*/
 
@@ -31,18 +35,16 @@ enum Rank : uint8_t {
     RANK_NB
 };
 
-constexpr File file_of(Square sq) { return File(sq & 7); }
-constexpr Rank rank_of(Square sq) { return Rank(sq >> 3); }
+constexpr File file_of(const Square sq) { return static_cast<File>(sq & 7); }
+constexpr Rank rank_of(const Square sq) { return static_cast<Rank>(sq >> 3); }
 
-constexpr Square make_square(File f, Rank r) { 
-    return Square(f + (r << 3));
+constexpr Square make_square(const File f, const Rank r) { 
+    return static_cast<Square>(f + (r << 3));
 }
 
-constexpr bool is_ok(Square sq) { return sq >= SQ_A1 && sq <= SQ_H8; }
-
+constexpr bool is_ok(const Square sq) { return sq >= SQ_A1 && sq <= SQ_H8; }
 
 /*------End of square, file and rank definitions-----*/
-
 
 /*-------------Color and piece defitions-------------*/
 
@@ -53,7 +55,7 @@ enum Color : uint8_t {
     COLOR_NONE = COLOR_NB,
 };
 
-constexpr Color operator~(Color c) { return Color(c ^ 1); }
+constexpr Color operator~(const Color c) { return static_cast<Color>(c ^ 1); }
 
 enum PieceType : uint8_t {
     NO_PIECE_TYPE, //this is not optimal...
@@ -80,33 +82,32 @@ enum Piece : uint8_t {
     PIECE_NB, //this isn't either...
 };
 
-constexpr PieceType type_of(Piece p) {
-    return PieceType(p & 7);
+constexpr PieceType type_of(const Piece p) {
+    return static_cast<PieceType>(p & 7);
 }
 
-constexpr Color color_of(Piece p) {
-    return Color(p >> 3);
+constexpr Color color_of(const Piece p) {
+    return static_cast<Color>(p >> 3);
 }
 
-constexpr Piece make_piece(Color c, PieceType pt) {
-    return Piece((c << 3) | pt);
+constexpr Piece make_piece(const Color c, const PieceType pt) {
+    return static_cast<Piece>((c << 3) | pt);
 }
 
-constexpr bool is_ok(Color c) {
+constexpr bool is_ok(const Color c) {
     return c == WHITE || c == BLACK;
 }
 
-constexpr bool is_ok(PieceType pt) {
+constexpr bool is_ok(const PieceType pt) {
     return pt >= PAWN && pt <= QUEEN;
 }
 
-constexpr bool is_ok(Piece p) {
+constexpr bool is_ok(const Piece p) {
     return (p >= W_PAWN && p <= W_KING) 
         || (p >= B_PAWN && p <= B_KING);
 }
 
 /*---------End of color and piece definitions--------*/
-
 
 /*-------------Castling rights defitnions------------*/
 
@@ -125,20 +126,19 @@ enum CastlingRights : uint8_t {
     CASTLING_RIGHTS_NB = 16,
 };
 
-constexpr CastlingRights kingside_rights(Color c) {
-    return CastlingRights(1 << (c * 2));
+constexpr CastlingRights kingside_rights(const Color c) {
+    return static_cast<CastlingRights>(1 << (c * 2));
 }
 
-constexpr CastlingRights queenside_rights(Color c) {
-    return CastlingRights(2 << (c * 2));
+constexpr CastlingRights queenside_rights(const Color c) {
+    return static_cast<CastlingRights>(2 << (c * 2));
 }
 
-constexpr bool is_ok(CastlingRights cr) {
+constexpr bool is_ok(const CastlingRights cr) {
     return cr < CASTLING_RIGHTS_NB && cr >= 0;
 }
 
 /*---------End of castling rights defitnions---------*/
-
 
 /*-------------Some operation definitions------------*/
 
@@ -172,20 +172,19 @@ ENABLE_INCR_OPERATORS_ON(Rank)
 #undef ENABLE_INCR_OPERATORS_ON
 #undef ENABLE_BASE_OPERATORS_ON
 
-constexpr Rank relative_rank(Color c, Rank r) {
-    return Rank(r ^ (c * 7));
+constexpr Rank relative_rank(const Color c, const Rank r) {
+    return static_cast<Rank>(r ^ (c * 7));
 }
 
-constexpr Rank relative_rank(Color c, Square s) {
+constexpr Rank relative_rank(const Color c, const Square s) {
     return relative_rank(c, rank_of(s));
 }
 
-constexpr Square relative_square(Color c, Square s) {
-    return Square(s ^ (c * 56));
+constexpr Square relative_square(const Color c, const Square s) {
+    return static_cast<Square>(s ^ (c * 56));
 }
 
 /*----------End of some operation definitions--------*/
-
 
 /*------------------Move defitions-------------------*/
 
@@ -201,41 +200,40 @@ enum MoveType : uint16_t {
     CASTLING = 3 << 14,
 };
 
-constexpr int from_to(Move m) {
+constexpr int from_to(const Move m) {
     return m & 0xFFF;
 }
 
-constexpr Square from_sq(Move m) {
-    return Square((m >> 6) & 0x3F);
+constexpr Square from_sq(const Move m) {
+    return static_cast<Square>((m >> 6) & 0x3F);
 }
 
-constexpr Square to_sq(Move m) {
-    return Square(m & 0x3F);
+constexpr Square to_sq(const Move m) {
+    return static_cast<Square>(m & 0x3F);
 }
 
-constexpr MoveType type_of(Move m) {
-    return MoveType(m & (3 << 14));
+constexpr MoveType type_of(const Move m) {
+    return static_cast<MoveType>(m & (3 << 14));
 }
 
-constexpr PieceType prom_type(Move m) {
-    return PieceType(((m >> 12) & 3) + KNIGHT);
+constexpr PieceType prom_type(const Move m) {
+    return static_cast<PieceType>(((m >> 12) & 3) + KNIGHT);
 }
 
-constexpr Move make_move(Square from, Square to) {
-    return Move((from << 6) | to);
+constexpr Move make_move(const Square from, const Square to) {
+    return static_cast<Move>((from << 6) | to);
 }
 
 template<MoveType MT>
-Move make(Square from, Square to, PieceType prom = KNIGHT) {
-    return Move(MT | ((prom - KNIGHT) << 12) | (from << 6) | to);
+Move make(const Square from, const Square to, const PieceType prom = KNIGHT) {
+    return static_cast<Move>(MT | ((prom - KNIGHT) << 12) | (from << 6) | to);
 }
 
-constexpr bool is_ok(Move m) {
+constexpr bool is_ok(const Move m) {
     return from_sq(m) != to_sq(m);
 }
 
 /*--------------End of move defitions----------------*/
-
 
 /*-------------Various values definitions------------*/
 
@@ -245,14 +243,13 @@ enum : int16_t {
     MATE_BOUND = 30000,
 };
 
-constexpr int mate_in(int ply) { return VALUE_MATE - ply; }
-constexpr int mated_in(int ply) { return -VALUE_MATE + ply; }
+constexpr int mate_in(const int ply) { return VALUE_MATE - ply; }
+constexpr int mated_in(const int ply) { return -VALUE_MATE + ply; }
 
 constexpr int MAX_DEPTH = 64;
 constexpr int MAX_MOVES = 224;
 
 /*----------End of various values definitions--------*/
-
 
 /*--------------Direction definitions----------------*/
 
@@ -263,27 +260,27 @@ enum Direction {
 };
 
 template<Direction D>
-constexpr Square sq_shift(Square sq) {
+constexpr Square sq_shift(const Square sq) {
     switch (D) {
     case NORTH:
-        return Square(sq + 8);
+        return static_cast<Square>(sq + 8);
     case SOUTH:
-        return Square(sq - 8);
+        return static_cast<Square>(sq - 8);
     case WEST:
-        return Square(sq - 1);
+        return static_cast<Square>(sq - 1);
     case EAST:
-        return Square(sq + 1);
+        return static_cast<Square>(sq + 1);
     case NORTH_WEST:
-        return Square(sq + 7);
+        return static_cast<Square>(sq + 7);
     case NORTH_EAST:
-        return Square(sq + 9);
+        return static_cast<Square>(sq + 9);
     case SOUTH_WEST:
-        return Square(sq - 9);
+        return static_cast<Square>(sq - 9);
     case SOUTH_EAST:
-        return Square(sq - 7);
+        return static_cast<Square>(sq - 7);
     default:
         return sq;
-    };
+    }
 }
 
 /*--------------End of direction definitions---------*/

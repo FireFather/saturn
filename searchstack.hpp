@@ -26,16 +26,16 @@ public:
 
     Entry &at(int ply);
 
-    int height() const;
-    int total_height() const;
-    bool capped() const;
+    [[nodiscard]] int height() const;
+    [[nodiscard]] int total_height() const;
+    [[nodiscard]] bool capped() const;
 
-    bool is_repetition(const Board &b) const;
+    [[nodiscard]] bool is_repetition(const Board &b) const;
 
-    int16_t mated_score() const;
+    [[nodiscard]] int16_t mated_score() const;
 
 private:
-    std::array<Entry, MAX_PLIES> entries_;
+    std::array<Entry, MAX_PLIES> entries_{};
     int height_{}, start_{};
 };
 

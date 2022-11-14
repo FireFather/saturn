@@ -1,6 +1,7 @@
 #ifndef PRIMITIVE_BITBOARD_HPP
 #define PRIMITIVE_BITBOARD_HPP
 
+#include <cassert>
 #include <cstdint>
 #include "common.hpp"
 
@@ -8,7 +9,6 @@
 #pragma warning(disable:4146)
 #include <intrin.h>
 #endif
-
 
 using Bitboard = uint64_t;
 
@@ -30,25 +30,25 @@ constexpr Square msb(Bitboard b) {
 
 #ifdef _WIN64  // MSVC, WIN64
 
-inline Square lsb(Bitboard b) {
+inline Square lsb(const Bitboard b) {
     assert(b);
     unsigned long idx;
     _BitScanForward64(&idx, b);
-    return (Square) idx;
+    return static_cast<Square>(idx);
 }
 
-inline Square msb(Bitboard b) {
+inline Square msb(const Bitboard b) {
     assert(b);
     unsigned long idx;
     _BitScanReverse64(&idx, b);
-    return (Square) idx;
+    return static_cast<Square>(idx);
 }
 #endif // WIN64
 #endif // MSVC
 
 inline int popcnt(Bitboard b) {
 #if defined(_MSC_VER) || defined(__INTEL_COMPILER)
-  return (int)__popcnt64(b);
+  return static_cast<int>(__popcnt64(b));
 #else // Assumed gcc or compatible compiler
   return __builtin_popcountll(b);
 #endif
@@ -56,10 +56,9 @@ inline int popcnt(Bitboard b) {
 
 /*-------------End of intrisinc defitions------------*/
 
-
 /*--------------Basic bitboard defitions-------------*/
 
-constexpr Bitboard EMPTY_BB = Bitboard(0);
+constexpr Bitboard EMPTY_BB = static_cast<Bitboard>(0);
 
 constexpr Bitboard RANK_1_BB = 0xFF << 0;
 constexpr Bitboard RANK_2_BB = RANK_1_BB << 8;
@@ -97,7 +96,6 @@ constexpr Bitboard QUEENSIDE_BB[COLOR_NB] = {
     0b10001ull, 0b10001ull << 56,
 };
 
-
 constexpr Bitboard KINGSIDE_MASK[COLOR_NB] {
     1ull << SQ_F1 | 1ull << SQ_G1,
     1ull << SQ_F8 | 1ull << SQ_G8,
@@ -108,37 +106,35 @@ constexpr Bitboard QUEENSIDE_MASK[COLOR_NB] {
     1ull << SQ_B8 | 1ull << SQ_C8 | 1ull << SQ_D8,
 };
 
-
 /*----------End of basic bitboard defitions----------*/
-
 
 /*---------------Bitboard operations-----------------*/
 
 //least significant square
-constexpr Bitboard lss_bb(Bitboard bb) {
+constexpr Bitboard lss_bb(const Bitboard bb) {
     assert(bb);
     return bb & -bb;
 }
 
 inline Square pop_lsb(Bitboard &bb) {
-    Square sq = lsb(bb);
+	const Square sq = lsb(bb);
     bb &= bb - 1;
     return sq;
 }
 
-constexpr Bitboard square_bb(Square sq) {
+constexpr Bitboard square_bb(const Square sq) {
     assert(sq < SQUARE_NB);
-    return Bitboard(1ull << sq);
+    return 1ull << sq;
 }
 
-constexpr Bitboard rank_bb(Rank r) { return RANK_1_BB << (8 * r); }
-constexpr Bitboard file_bb(File f) { return FILE_A_BB << f; }
+constexpr Bitboard rank_bb(const Rank r) { return RANK_1_BB << (8 * r); }
+constexpr Bitboard file_bb(const File f) { return FILE_A_BB << f; }
 
-constexpr Bitboard sq_rank_bb(Square s) { return rank_bb(rank_of(s)); }
-constexpr Bitboard sq_file_bb(Square s) { return file_bb(file_of(s)); }
+constexpr Bitboard sq_rank_bb(const Square s) { return rank_bb(rank_of(s)); }
+constexpr Bitboard sq_file_bb(const Square s) { return file_bb(file_of(s)); }
 
 template<Direction D>
-constexpr Bitboard shift(Bitboard b) {
+constexpr Bitboard shift(const Bitboard b) {
   return  D == NORTH      ?  b           << 8 : D == SOUTH      ?  b           >> 8
         : D == EAST       ? (b & ~FILE_H_BB) << 1 : D == WEST       ? (b & ~FILE_A_BB) >> 1
         : D == NORTH_EAST ? (b & ~FILE_H_BB) << 9 : D == NORTH_WEST ? (b & ~FILE_A_BB) << 7
@@ -146,16 +142,16 @@ constexpr Bitboard shift(Bitboard b) {
         : 0;
 }
 
-constexpr Bitboard adjacent_files_bb(File f) {
-    Bitboard bb = file_bb(f);
+constexpr Bitboard adjacent_files_bb(const File f) {
+	const Bitboard bb = file_bb(f);
     return shift<WEST>(bb) | shift<EAST>(bb);
 }
 
-constexpr Bitboard relative_rank_bb(Color c, Rank r) {
+constexpr Bitboard relative_rank_bb(const Color c, const Rank r) {
     return rank_bb(relative_rank(c, r));
 }
 
-constexpr Bitboard relative_rank_bb(Color c, Square s) {
+constexpr Bitboard relative_rank_bb(const Color c, const Square s) {
     return rank_bb(relative_rank(c, s));
 }
 

@@ -55,7 +55,7 @@ private:
     void print_info();
 
     std::map<std::string, UciOption> options_;
-    Board board_;
+    Board board_{};
     Stack st_;
     SearchWorker search_;
 };

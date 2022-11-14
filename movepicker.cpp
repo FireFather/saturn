@@ -5,7 +5,7 @@
 
 namespace {
 
-void insertion_sort(ExtMove *begin, ExtMove *end) {
+void insertion_sort(ExtMove *begin, const ExtMove *end) {
     for (ExtMove *p = begin + 1; p < end; ++p) {
         ExtMove x = *p, *q;
         for (q = p - 1; q >= begin && *q < x; --q)
@@ -45,20 +45,19 @@ void Histories::reset() {
     memset(main.data(), 0, sizeof(main));
 }
 
-void Histories::add_bonus(const Board &b, Move m, int16_t bonus) {
-    Square from = from_sq(m), to = to_sq(m);
-    Piece p = b.piece_on(from);
+void Histories::add_bonus(const Board &b, const Move m, const int16_t bonus) {
+	const Square from = from_sq(m), to = to_sq(m);
+    const Piece p = b.piece_on(from);
 
     int16_t &entry = main[color_of(p)][from][to];
     entry += 32 * bonus - entry * abs(bonus) / 512;
 }
 
-void Histories::update(const Board &b, Move bm, 
-        int depth, const Move *quiets, int nq)
+void Histories::update(const Board &b, const Move bm,
+                       const int depth, const Move *quiets, const int nq)
 {
-    int inc = std::min(depth * depth, 576);
-    bool quiet = b.is_quiet(bm);
-    if (quiet) {
+	const int inc = std::min(depth * depth, 576);
+	if (const bool quiet = b.is_quiet(bm)) {
         add_bonus(b, bm, inc);
 
         for (int i = 0; i < nq - 1; ++i)
@@ -66,16 +65,15 @@ void Histories::update(const Board &b, Move bm,
     }
 }
 
-int16_t Histories::get_score(const Board &b, Move m) const {
-    Square from = from_sq(m), to = to_sq(m);
-    Piece p = b.piece_on(from);
+int16_t Histories::get_score(const Board &b, const Move m) const {
+	const Square from = from_sq(m), to = to_sq(m);
+    const Piece p = b.piece_on(from);
     return main[color_of(p)][from][to];
 }
 
-
-MovePicker::MovePicker(const Board &board, Move ttm,
+MovePicker::MovePicker(const Board &board, const Move ttm,
         const Move *killers, const Histories *histories,
-        Move counter, Move followup)
+        const Move counter, const Move followup)
     : board_(board), ttm_(ttm), counter_(counter), 
       followup_(followup), hist_(histories),
       stage_(ttm ? Stage::TT_MOVE : Stage::INIT_TACTICAL)
@@ -109,7 +107,8 @@ Move MovePicker::next() {
 
         [[fallthrough]];
     case Stage::GOOD_TACTICAL:
-        m = select([this]() {
+        m = select([this]
+        {
             if (board_.see_ge(*cur_)) return true;
             *end_bad_caps_++ = *cur_;
             return false;
@@ -171,25 +170,26 @@ Move MovePicker::next() {
 
         [[fallthrough]];
     case Stage::NON_TACTICAL:
-        return select([this]() {
+        return select([this]
+        {
             return *cur_ != killers_[0]
                 && *cur_ != killers_[1]
                 && *cur_ != counter_
                 && *cur_ != followup_;
         });
-    };
+    }
 
     //unreachable
     return MOVE_NONE;
 }
 
-
 Stage MovePicker::stage() const { return stage_; }
 
-void MovePicker::score_tactical() {
+void MovePicker::score_tactical() const
+{
     for (auto it = cur_; it != end_; ++it) {
-        PieceType victim = type_of(board_.piece_on(to_sq(*it))),
-                  attacker = type_of(board_.piece_on(from_sq(*it)));
+        PieceType victim = type_of(board_.piece_on(to_sq(*it)));
+        const PieceType attacker = type_of(board_.piece_on(from_sq(*it)));
         if (victim == NO_PIECE_TYPE)
             victim = prom_type(*it);
 
@@ -197,11 +197,12 @@ void MovePicker::score_tactical() {
     }
 }
 
-void MovePicker::score_nontactical() {
+void MovePicker::score_nontactical() const
+{
     for (auto it = cur_; it != end_; ++it) {
-        Square from = from_sq(*it), to = to_sq(*it);
-        Piece p = board_.piece_on(from);
-        int16_t k = SortingTypes[type_of(p)];
+	    const Square from = from_sq(*it), to = to_sq(*it);
+        const Piece p = board_.piece_on(from);
+        const int16_t k = SortingTypes[type_of(p)];
         it->value = k * (SortingTable[to] - SortingTable[from]);
         if (hist_)
             it->value += hist_->main[color_of(p)][from][to];

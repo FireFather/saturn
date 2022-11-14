@@ -4,9 +4,15 @@
 #include <algorithm>
 #include <xmmintrin.h>
 
+#ifdef _MSC_VER
+#else
+#pragma GCC diagnostic ignored "-Wtype-limits"
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
 TranspositionTable g_tt;
 
-int TTEntry::score(int ply) const {
+int TTEntry::score(const int ply) const {
     int s = score16;
     if (s > MATE_BOUND)
         s -= ply;
@@ -15,22 +21,22 @@ int TTEntry::score(int ply) const {
     return s;
 }
 
-TTEntry::TTEntry(uint64_t key, int s, Bound b, 
-    int depth, Move m, int ply, bool null) : key(key)
+TTEntry::TTEntry(const uint64_t key, int s, const Bound b,
+                 const int depth, const Move m, const int ply, bool null) : key(key)
 {
-    move16 = uint16_t(m);
-    depth8 = uint8_t(depth);
-    bound8 = uint8_t(b);
+    move16 = static_cast<uint16_t>(m);
+    depth8 = static_cast<uint8_t>(depth);
+    bound8 = static_cast<uint8_t>(b);
     avoid_null = null;
 
     if (s > MATE_BOUND)
         s += ply;
     else if (s < -MATE_BOUND)
         s -= ply;
-    score16 = int16_t(s);
+    score16 = static_cast<int16_t>(s);
 }
 
-void TranspositionTable::resize(size_t mbs) {
+void TranspositionTable::resize(const size_t mbs) {
     if (buckets_)
         delete[] buckets_;
     size_ = mbs * 1024 * 1024 / sizeof(Bucket);
@@ -38,7 +44,8 @@ void TranspositionTable::resize(size_t mbs) {
     memset(buckets_, 0, size_ * sizeof(Bucket));
 }
 
-void TranspositionTable::clear() {
+void TranspositionTable::clear() const
+{
     if (buckets_)
         memset(buckets_, 0, size_ * sizeof(Bucket));
 }
@@ -47,12 +54,13 @@ void TranspositionTable::new_search() {
     ++age_;
 }
 
-bool TranspositionTable::probe(uint64_t key, 
-        TTEntry &e) const 
+bool TranspositionTable::probe(const uint64_t key, 
+                               TTEntry &e) const 
 {
-    Bucket &b = buckets_[key % size_];
-    for (int i = 0; i < Bucket::N; ++i) {
-        e = b.entries[i];
+	const Bucket &b = buckets_[key % size_];
+    for (const auto entrie : b.entries)
+    {
+        e = entrie;
         if ((e.key ^ e.data) == key) {
             e.age = age_;
             return true;
@@ -62,12 +70,13 @@ bool TranspositionTable::probe(uint64_t key,
     return false;
 }
 
-void TranspositionTable::store(TTEntry new_entry) {
-    Bucket &b = buckets_[new_entry.key % size_];
+void TranspositionTable::store(TTEntry entry) const
+{
+    Bucket &b = buckets_[entry.key % size_];
     TTEntry *replace = nullptr;
-    for (int i = 0; i < Bucket::N; ++i) {
-        TTEntry &e = b.entries[i];
-        if ((e.key ^ e.data) == new_entry.key) {
+    for (auto& e : b.entries)
+    {
+	    if ((e.key ^ e.data) == entry.key) {
             replace = &e;
             break;
         }
@@ -75,18 +84,18 @@ void TranspositionTable::store(TTEntry new_entry) {
 
     if (!replace) {
         int replace_depth = 9999;
-        for (int i = 0; i < Bucket::N; ++i) {
-            TTEntry &e = b.entries[i];
-            if (e.age != age_ && e.depth8 < replace_depth) {
+        for (auto& e : b.entries)
+        {
+	        if (e.age != age_ && e.depth8 < replace_depth) {
                 replace = &e;
                 replace_depth = e.depth8;
             }
         }
 
         if (!replace) {
-            for (int i = 0; i < Bucket::N; ++i) {
-                TTEntry &e = b.entries[i];
-                if (e.depth8 < replace_depth) {
+            for (auto& e : b.entries)
+            {
+	            if (e.depth8 < replace_depth) {
                     replace = &e;
                     replace_depth = e.depth8;
                 }
@@ -94,21 +103,21 @@ void TranspositionTable::store(TTEntry new_entry) {
         }
     }
 
-    new_entry.age = age_;
+    entry.age = age_;
 
-    replace->key = new_entry.key ^ new_entry.data;
-    replace->data = new_entry.data;
+    replace->key = entry.key ^ entry.data;
+    replace->data = entry.data;
 }
 
-void TranspositionTable::prefetch(uint64_t key) const {
-    _mm_prefetch((const char*)&buckets_[key % size_], 
+void TranspositionTable::prefetch(const uint64_t key) const {
+    _mm_prefetch(reinterpret_cast<const char*>(&buckets_[key % size_]), 
             _MM_HINT_NTA);
 }
 
 uint64_t TranspositionTable::hashfull() const {
     uint64_t cnt = 0;
     for (size_t i = 0; i < 1000; ++i) {
-        for (auto &e: buckets_[i].entries)
+        for (const auto &e: buckets_[i].entries)
             cnt += e.depth8 && e.age == age_;
     }
 
@@ -121,11 +130,12 @@ TranspositionTable::~TranspositionTable() {
     }
 }
 
-int TranspositionTable::extract_pv(Board b, Move *pv, int len) {
+int TranspositionTable::extract_pv(Board b, Move *pv, const int len) const
+{
     int n = 0;
-    TTEntry tte;
+    TTEntry tte{};
     while (probe(b.key(), tte) && n < len) {
-        Move m = Move(tte.move16);
+	    const auto m = static_cast<Move>(tte.move16);
         if (!b.is_valid_move(m))
             break;
         b = b.do_move(m);

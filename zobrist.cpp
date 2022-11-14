@@ -12,7 +12,7 @@ void init_zobrist() {
             ZOBRIST.psq[p][s] = dist(rng);
 
     for (CastlingRights cr = NO_CASTLING; cr <= CASTLING_RIGHTS_NB; 
-            cr = CastlingRights(cr + 1))
+            cr = static_cast<CastlingRights>(cr + 1))
         ZOBRIST.castling[cr] = dist(rng);
 
     for (File f = FILE_A; f <= FILE_H; ++f)
