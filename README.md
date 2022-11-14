@@ -1,5 +1,7 @@
-## About
-This is a simple uci chess engine. 
+## New:
+NNUE (halfkp_256x2-32-32) eval
+Clang/reharper code optimizations
+
 The progress information is located in progress/progress.md
 
 ## TODO
