@@ -1,6 +1,6 @@
 ## New:
-NNUE (halfkp_256x2-32-32) eval
-Clang/reharper code optimizations
+- NNUE (halfkp_256x2-32-32) eval
+- Clang/reharper code optimizations
 
 The progress information is located in progress/progress.md
 
